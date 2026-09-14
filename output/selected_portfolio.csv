@@ -1,0 +1,6 @@
+ETF,Name,Asset Class,Allocation %,Expected Return %,Volatility %,Diversification Score,ETF Score
+VFV,Vanguard S&P 500 Index ETF,E,25,12,18,80,112.0
+XIC,iShares Core S&P/TSX Capped Composite ETF,E,20,8,16,75,97.5
+XEF,iShares Core MSCI EAFE IMI Index ETF,E,15,7,17,85,96.5
+XBB,iShares Core Canadian Universe Bond Index ETF,B,30,4,7,70,97.0
+CGL,iShares Gold Bullion ETF,G,10,6,14,78,95.0

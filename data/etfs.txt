@@ -1,0 +1,9 @@
+Vanguard S&P 500 Index ETF: VFV_AE_R12_V18_D80_W25
+iShares Core S&P/TSX Capped Composite ETF: XIC_AE_R8_V16_D75_W20
+iShares Core MSCI EAFE IMI Index ETF: XEF_AE_R7_V17_D85_W15
+BMO NASDAQ 100 Equity Hedged to CAD Index ETF: ZQQ_AE_R14_V24_D60_W25
+Vanguard FTSE Canadian High Dividend Yield Index ETF: VDY_AE_R9_V15_D65_W20
+iShares Core Canadian Universe Bond Index ETF: XBB_AB_R4_V7_D70_W30
+BMO Aggregate Bond Index ETF: ZAG_AB_R4_V6_D72_W25
+iShares Gold Bullion ETF: CGL_AG_R6_V14_D78_W10
+BMO Equal Weight Global Gold Index ETF: ZGD_AG_R8_V28_D55_W10
