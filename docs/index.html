@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Risk-Aware ETF Portfolio Lab</title>
+  <meta name="description" content="An interactive educational ETF allocation and stress-testing tool.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1324'/%3E%3Cpath d='M14 45V31h8v14zm14 0V20h8v25zm14 0V12h8v33z' fill='%2357d6b5'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07101f;
+      --panel: #101b2e;
+      --panel-2: #14223a;
+      --line: #263754;
+      --text: #f4f7fb;
+      --muted: #9babc3;
+      --mint: #57d6b5;
+      --blue: #73a9ff;
+      --gold: #f1c66d;
+      --danger: #ff8c8c;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .28);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(87,214,181,.10), transparent 30rem),
+        radial-gradient(circle at 95% 20%, rgba(115,169,255,.09), transparent 34rem),
+        var(--bg);
+      color: var(--text);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    .shell { width: min(1440px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 54px; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .eyebrow { color: var(--mint); font-size: .78rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 7px 0 5px; font-size: clamp(2rem, 3vw, 3.25rem); line-height: 1.06; letter-spacing: -.045em; }
+    .intro { max-width: 720px; margin: 0; color: var(--muted); }
+    .reset { border: 1px solid var(--line); border-radius: 12px; padding: 10px 15px; background: var(--panel); color: var(--text); cursor: pointer; }
+    .reset:hover { border-color: var(--mint); }
+    .workspace { display: grid; grid-template-columns: minmax(360px, .8fr) minmax(560px, 1.45fr); gap: 22px; align-items: start; }
+    .card { background: linear-gradient(180deg, rgba(20,34,58,.96), rgba(16,27,46,.96)); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); }
+    .controls { padding: 24px; position: sticky; top: 18px; }
+    .results { overflow: hidden; }
+    h2 { margin: 0 0 5px; font-size: 1.14rem; letter-spacing: -.02em; }
+    .hint { margin: 0 0 22px; color: var(--muted); font-size: .9rem; }
+    .field { margin: 0 0 18px; }
+    label, .label { display: block; margin-bottom: 7px; color: #dbe4f2; font-size: .86rem; font-weight: 650; }
+    input[type="number"], select { width: 100%; border: 1px solid var(--line); border-radius: 11px; background: #0b1629; color: var(--text); padding: 11px 12px; outline: none; }
+    input:focus, select:focus { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(87,214,181,.12); }
+    .slots { display: grid; gap: 9px; }
+    .slot { display: grid; grid-template-columns: 1fr 74px; gap: 9px; }
+    .slot input { text-align: right; }
+    .scenario { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7,16,31,.5); }
+    .slider-row { display: grid; grid-template-columns: 62px 1fr 54px; align-items: center; gap: 10px; }
+    .slider-row span { font-size: .84rem; }
+    .slider-row output { color: var(--mint); text-align: right; font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: var(--mint); }
+    .weight-status { min-height: 24px; margin: 2px 0 14px; padding: 7px 10px; border-radius: 9px; color: var(--mint); background: rgba(87,214,181,.08); font-size: .83rem; }
+    .weight-status.bad { color: var(--danger); background: rgba(255,140,140,.08); }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+    .metric { padding: 22px; min-width: 0; }
+    .metric + .metric { border-left: 1px solid var(--line); }
+    .metric small { display: block; color: var(--muted); font-size: .76rem; letter-spacing: .03em; }
+    .metric strong { display: block; margin-top: 8px; font-size: clamp(1.2rem, 2vw, 1.7rem); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .metric strong.positive { color: var(--mint); }
+    .metric strong.negative { color: var(--danger); }
+    .viz { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; padding: 24px; border-bottom: 1px solid var(--line); }
+    .viz h3, .table-wrap h3 { margin: 0 0 14px; font-size: .92rem; }
+    .donut-area { display: flex; align-items: center; gap: 20px; }
+    .donut { width: 144px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(var(--blue) 0 60%, var(--mint) 60% 90%, var(--gold) 90%); position: relative; flex: none; }
+    .donut::after { content: "Allocation"; position: absolute; inset: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--panel); color: var(--muted); font-size: .74rem; }
+    .legend { display: grid; gap: 9px; width: 100%; }
+    .legend-row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; color: var(--muted); font-size: .84rem; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-row b { color: var(--text); font-weight: 650; }
+    .bars { display: grid; gap: 12px; }
+    .bar-label { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; }
+    .track { height: 9px; overflow: hidden; border-radius: 20px; background: #081326; }
+    .fill { height: 100%; border-radius: inherit; transition: width .25s ease; }
+    .table-wrap { padding: 24px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 710px; }
+    th { padding: 9px 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .72rem; font-weight: 650; letter-spacing: .05em; text-align: left; text-transform: uppercase; }
+    td { padding: 13px 10px; border-bottom: 1px solid rgba(38,55,84,.65); font-size: .85rem; font-variant-numeric: tabular-nums; }
+    td.num, th.num { text-align: right; }
+    .ticker { font-weight: 760; color: var(--text); }
+    .asset-pill { display: inline-block; padding: 3px 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .72rem; }
+    footer { margin-top: 18px; color: var(--muted); font-size: .78rem; text-align: center; }
+    @media (max-width: 980px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .metric:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+      .metric:nth-child(4) { border-top: 1px solid var(--line); }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 1440px); padding-top: 22px; }
+      header { align-items: flex-start; flex-direction: column; }
+      .viz { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: 1fr; }
+      .metric + .metric, .metric:nth-child(3), .metric:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .donut-area { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">Interactive portfolio stress test</div>
+        <h1>Risk-Aware ETF Portfolio Lab</h1>
+        <p class="intro">Build a five-ETF allocation, adjust an illustrative market scenario, and see how each holding affects the portfolio.</p>
+      </div>
+      <button class="reset" id="reset" type="button">Reset sample</button>
+    </header>
+
+    <section class="workspace" aria-label="ETF portfolio workspace">
+      <aside class="card controls">
+        <h2>Portfolio inputs</h2>
+        <p class="hint">Choose 3 equity ETFs, 1 bond ETF, and 1 gold ETF. Weights must total 100%.</p>
+
+        <div class="field">
+          <label for="amount">Investment amount (CAD)</label>
+          <input id="amount" type="number" min="100" step="100" value="10000">
+        </div>
+
+        <div class="field">
+          <span class="label">Holdings and weights</span>
+          <div class="slots" id="slots"></div>
+        </div>
+        <div class="weight-status" id="weightStatus" role="status"></div>
+
+        <div class="field">
+          <span class="label">Illustrative stress scenario</span>
+          <div class="scenario">
+            <div class="slider-row"><span>Equity</span><input id="stressE" type="range" min="-40" max="20" value="-15"><output id="outE">-15%</output></div>
+            <div class="slider-row"><span>Bond</span><input id="stressB" type="range" min="-20" max="20" value="-3"><output id="outB">-3%</output></div>
+            <div class="slider-row"><span>Gold</span><input id="stressG" type="range" min="-30" max="30" value="5"><output id="outG">+5%</output></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card results" aria-live="polite">
+        <div class="summary">
+          <div class="metric"><small>Starting value</small><strong id="startValue">$10,000</strong></div>
+          <div class="metric"><small>Stressed value</small><strong id="endValue">$9,060</strong></div>
+          <div class="metric"><small>Portfolio change</small><strong id="changeValue">−$940</strong></div>
+          <div class="metric"><small>Weighted expected return</small><strong id="returnValue">8.0%</strong></div>
+        </div>
+
+        <div class="viz">
+          <section>
+            <h3>Asset-class allocation</h3>
+            <div class="donut-area">
+              <div class="donut" id="donut" aria-label="Allocation chart"></div>
+              <div class="legend" id="legend"></div>
+            </div>
+          </section>
+          <section>
+            <h3>Scenario impact by asset class</h3>
+            <div class="bars" id="bars"></div>
+          </section>
+        </div>
+
+        <div class="table-wrap">
+          <h3>Holding-level calculation</h3>
+          <table>
+            <thead><tr><th>ETF</th><th>Asset class</th><th class="num">Weight</th><th class="num">Amount</th><th class="num">ETF score</th><th class="num">Scenario</th><th class="num">Stressed value</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+    <footer>Illustrative educational inputs only. This tool is not investment advice or a market forecast.</footer>
+  </main>
+
+  <script>
+    const etfs = [
+      { id:'VFV', name:'Vanguard S&P 500 Index ETF', cls:'Equity', code:'E', ret:12, vol:18, div:80 },
+      { id:'XIC', name:'iShares Core S&P/TSX Capped Composite ETF', cls:'Equity', code:'E', ret:8, vol:16, div:75 },
+      { id:'XEF', name:'iShares Core MSCI EAFE IMI Index ETF', cls:'Equity', code:'E', ret:7, vol:17, div:85 },
+      { id:'ZQQ', name:'BMO NASDAQ 100 Equity Hedged to CAD Index ETF', cls:'Equity', code:'E', ret:14, vol:24, div:60 },
+      { id:'VDY', name:'Vanguard FTSE Canadian High Dividend Yield Index ETF', cls:'Equity', code:'E', ret:9, vol:15, div:65 },
+      { id:'XBB', name:'iShares Core Canadian Universe Bond Index ETF', cls:'Bond', code:'B', ret:4, vol:7, div:70 },
+      { id:'ZAG', name:'BMO Aggregate Bond Index ETF', cls:'Bond', code:'B', ret:4, vol:6, div:72 },
+      { id:'CGL', name:'iShares Gold Bullion ETF', cls:'Gold', code:'G', ret:6, vol:14, div:78 },
+      { id:'ZGD', name:'BMO Equal Weight Global Gold Index ETF', cls:'Gold', code:'G', ret:8, vol:28, div:55 }
+    ];
+    const defaults = [
+      { code:'E', id:'VFV', weight:25 }, { code:'E', id:'XIC', weight:20 }, { code:'E', id:'XEF', weight:15 },
+      { code:'B', id:'XBB', weight:30 }, { code:'G', id:'CGL', weight:10 }
+    ];
+    const colours = { Equity:'#73a9ff', Bond:'#57d6b5', Gold:'#f1c66d' };
+    const state = { slots: structuredClone(defaults) };
+    const money = new Intl.NumberFormat('en-CA', { style:'currency', currency:'CAD', maximumFractionDigits:0 });
+    const signedMoney = n => `${n < 0 ? '−' : '+'}${money.format(Math.abs(n))}`;
+    const signedPct = n => `${n > 0 ? '+' : ''}${n}%`;
+
+    function score(etf) { return etf.ret * 4 + Math.max(0, 30 - etf.vol) * 2 + etf.div * .5; }
+    function available(code) { return etfs.filter(e => e.code === code); }
+
+    function buildSlots() {
+      const root = document.querySelector('#slots');
+      root.innerHTML = '';
+      state.slots.forEach((slot, index) => {
+        const wrap = document.createElement('div'); wrap.className = 'slot';
+        const select = document.createElement('select'); select.setAttribute('aria-label', `${slot.code === 'E' ? 'Equity' : slot.code === 'B' ? 'Bond' : 'Gold'} ETF`);
+        available(slot.code).forEach(etf => {
+          const opt = document.createElement('option'); opt.value = etf.id; opt.textContent = `${etf.id} · ${etf.name}`; opt.selected = etf.id === slot.id; select.append(opt);
+        });
+        select.addEventListener('change', e => { state.slots[index].id = e.target.value; render(); });
+        const weight = document.createElement('input'); weight.type='number'; weight.min='0'; weight.max='100'; weight.step='1'; weight.value=slot.weight; weight.setAttribute('aria-label', `${slot.id} allocation percentage`);
+        weight.addEventListener('input', e => { state.slots[index].weight = Number(e.target.value) || 0; render(); });
+        wrap.append(select, weight); root.append(wrap);
+      });
+    }
+
+    function readStress() { return { E:+stressE.value, B:+stressB.value, G:+stressG.value }; }
+    function calculations() {
+      const amount = Math.max(0, +document.querySelector('#amount').value || 0);
+      const stress = readStress();
+      const holdings = state.slots.map(slot => {
+        const etf = etfs.find(item => item.id === slot.id);
+        const initial = amount * slot.weight / 100;
+        const end = initial * (1 + stress[slot.code] / 100);
+        return { ...slot, ...etf, initial, end, scenario:stress[slot.code], score:score(etf) };
+      });
+      const totalWeight = holdings.reduce((sum,h) => sum+h.weight, 0);
+      const end = holdings.reduce((sum,h) => sum+h.end, 0);
+      const weightedReturn = holdings.reduce((sum,h) => sum+h.ret*h.weight/100, 0);
+      return { amount, stress, holdings, totalWeight, end, weightedReturn };
+    }
+
+    function render() {
+      const c = calculations();
+      const unique = new Set(c.holdings.map(h => h.id)).size === c.holdings.length;
+      const valid = c.totalWeight === 100 && unique;
+      weightStatus.textContent = !unique ? 'Each ETF can only be selected once.' : valid ? 'Allocation complete · 100%' : `Allocation must total 100% · currently ${c.totalWeight}%`;
+      weightStatus.classList.toggle('bad', !valid);
+      startValue.textContent = money.format(c.amount);
+      endValue.textContent = valid ? money.format(c.end) : '—';
+      const change = c.end - c.amount;
+      changeValue.textContent = valid ? signedMoney(change) : '—';
+      changeValue.className = valid ? (change >= 0 ? 'positive' : 'negative') : '';
+      returnValue.textContent = valid ? `${c.weightedReturn.toFixed(1)}%` : '—';
+      document.querySelector('#outE').textContent=signedPct(c.stress.E); document.querySelector('#outB').textContent=signedPct(c.stress.B); document.querySelector('#outG').textContent=signedPct(c.stress.G);
+
+      const classWeights = { Equity:0, Bond:0, Gold:0 };
+      c.holdings.forEach(h => classWeights[h.cls] += h.weight);
+      const e = classWeights.Equity, b = classWeights.Bond;
+      donut.style.background = `conic-gradient(${colours.Equity} 0 ${e}%, ${colours.Bond} ${e}% ${e+b}%, ${colours.Gold} ${e+b}% 100%)`;
+      legend.innerHTML = Object.entries(classWeights).map(([k,v]) => `<div class="legend-row"><span class="dot" style="background:${colours[k]}"></span><span>${k}</span><b>${v}%</b></div>`).join('');
+
+      bars.innerHTML = Object.entries(classWeights).map(([k,w]) => {
+        const code = k[0], impact = c.amount * w/100 * c.stress[code]/100;
+        const width = Math.min(100, Math.abs(c.stress[code]) / 40 * 100);
+        return `<div><div class="bar-label"><span>${k}</span><span>${valid ? signedMoney(impact) : '—'}</span></div><div class="track"><div class="fill" style="width:${width}%;background:${impact >= 0 ? 'var(--mint)' : 'var(--danger)'}"></div></div></div>`;
+      }).join('');
+
+      rows.innerHTML = c.holdings.map(h => `<tr><td><span class="ticker">${h.id}</span><br><span style="color:var(--muted);font-size:.74rem">${h.name}</span></td><td><span class="asset-pill">${h.cls}</span></td><td class="num">${h.weight}%</td><td class="num">${money.format(h.initial)}</td><td class="num">${h.score.toFixed(1)}</td><td class="num" style="color:${h.scenario >= 0 ? 'var(--mint)' : 'var(--danger)'}">${signedPct(h.scenario)}</td><td class="num">${money.format(h.end)}</td></tr>`).join('');
+    }
+
+    document.querySelector('#amount').addEventListener('input', render);
+    ['E','B','G'].forEach(code => document.querySelector(`#stress${code}`).addEventListener('input', render));
+    document.querySelector('#reset').addEventListener('click', () => {
+      state.slots = structuredClone(defaults); amount.value=10000; stressE.value=-15; stressB.value=-3; stressG.value=5; buildSlots(); render();
+    });
+    buildSlots(); render();
+
+    const context = document.modelContext;
+    if (context?.registerTool) {
+      try {
+        context.registerTool({
+          name:'configure_etf_scenario', title:'Configure ETF scenario',
+          description:'Set the investment amount and the equity, bond, and gold stress assumptions, then update the visible portfolio results.',
+          inputSchema:{ type:'object', properties:{ amount:{type:'number',minimum:100}, equityStress:{type:'number',minimum:-40,maximum:20}, bondStress:{type:'number',minimum:-20,maximum:20}, goldStress:{type:'number',minimum:-30,maximum:30} }, required:['amount','equityStress','bondStress','goldStress'], additionalProperties:false },
+          annotations:{ readOnlyHint:false, untrustedContentHint:false },
+          execute(input) {
+            if (!input || !Number.isFinite(input.amount) || input.amount < 100) throw new Error('A valid investment amount of at least 100 is required.');
+            const ranges = [['equityStress',-40,20],['bondStress',-20,20],['goldStress',-30,30]];
+            for (const [key,min,max] of ranges) if (!Number.isFinite(input[key]) || input[key] < min || input[key] > max) throw new Error(`${key} is outside the supported range.`);
+            amount.value=input.amount; stressE.value=input.equityStress; stressB.value=input.bondStress; stressG.value=input.goldStress; render();
+            const c=calculations(); return { startingValue:c.amount, stressedValue:Math.round(c.end), change:Math.round(c.end-c.amount) };
+          }
+        });
+      } catch (error) { console.warn('WebMCP registration unavailable', error); }
+    }
+  </script>
+</body>
+</html>
