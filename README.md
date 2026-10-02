@@ -1,4 +1,9 @@
 # Risk-Aware ETF Portfolio Allocation Tool
+## Live Demo
+
+[Open the Risk-Aware ETF Portfolio Lab](https://risk-aware-etf-portfolio-lab.mmmlinda1111.chatgpt.site)
+
+Build a five-ETF allocation, adjust the investment amount and asset-class stress assumptions, and review holding-level results directly in your browser. No Python installation is required.
 
 This beginner-friendly project uses Python to build a diversified ETF allocation under simple asset-class and budget constraints. An Excel report then converts the selected percentage weights into a CAD 10,000 portfolio and applies an editable stress scenario.
 
