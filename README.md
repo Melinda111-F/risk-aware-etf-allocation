@@ -42,6 +42,14 @@ The Excel workbook uses editable assumptions:
 - Gold: +5%
 
 Under this scenario, the CAD 10,000 sample portfolio falls to CAD 9,060, a change of -CAD 940.
+## Excel VBA automation
+
+The macro-enabled workbook adds two controls to the Excel report:
+
+- **Run Stress Test** validates the investment amount and portfolio allocation, recalculates the workbook, and displays the stressed portfolio value and dollar change.
+- **Reset Assumptions** restores the original investment amount and asset-class stress assumptions.
+
+Download [`Risk_Aware_ETF_Portfolio_Report_VBA.xlsm`](Risk_Aware_ETF_Portfolio_Report_VBA.xlsm) to use the VBA-enabled version in desktop Excel. Macros must be enabled when the workbook is opened.
 
 ## Files
 
@@ -52,6 +60,7 @@ Under this scenario, the CAD 10,000 sample portfolio falls to CAD 9,060, a chang
 - `tests/test_etf_allocation.py` — unit tests for the core logic
 - `output/selected_portfolio.csv` — reproducible sample output
 - `output/Risk_Aware_ETF_Portfolio_Report.xlsx` — Excel analysis and stress-test report
+- `Risk_Aware_ETF_Portfolio_Report_VBA.xlsm` — macro-enabled Excel report with automated validation, stress testing, and assumption reset controls
 
 ## Run the project
 
